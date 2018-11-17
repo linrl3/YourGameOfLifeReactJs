@@ -8,6 +8,7 @@ const glider=[{x: 1, y: 0},{x: 2, y: 1},{x: 0, y: 2},{x: 1, y: 2},{x: 2, y: 2}]
 const exploder=[{x: 0, y: 0},{x: 2, y: 0},{x: 4, y: 0},{x: 0, y: 1},{x: 4, y: 1},{x: 0, y: 2},{x: 4, y: 2},{x: 0, y: 3},{x: 4, y: 3},{x: 0, y: 4},{x: 2, y: 4},{x: 4, y: 4}]
 const pattern={"gliderCells":glider,"exploderCells":exploder}
 
+
 class Cell extends React.Component{
 	constructor(props){
 		super(props)
@@ -92,10 +93,19 @@ class Game extends React.Component{
 	getElementOffset() {
 	    const rect = this.boardRef.getBoundingClientRect();
 	    const doc = document.documentElement;
+	    console.log("---------")
+	    console.log("rect.left",rect.left)
+	    console.log("rect.top",rect.top)
+	    console.log("window.pageXOffset",window.pageXOffset)
+	    console.log("window.pageYOffset",window.pageYOffset)
+	    console.log("doc.clientLeft",doc.clientLeft)
+	    console.log("doc.clientTop",doc.clientTop)
 	    return {
 	      //consider scrolling
-	      x: (rect.left + window.pageXOffset) - doc.clientLeft,
-	      y: (rect.top + window.pageYOffset) - doc.clientTop,
+	      //x: (rect.left - window.pageXOffset) - doc.clientLeft,
+	      //y: (rect.top - window.pageYOffset) - doc.clientTop,
+	      x: (rect.left ) - doc.clientLeft,
+	      y: (rect.top ) - doc.clientTop,
 	    };
 	  }
 	runInterations(){
@@ -127,6 +137,8 @@ class Game extends React.Component{
 	handleClick = (event) => {
 	    const elemOffset = this.getElementOffset();
 	    //event.clientX is the position of the mouse click, minus offset, we can get the relative position in the graph
+	    console.log("event.clientX",event.clientX)
+	    console.log("event.clientY",event.clientY)
 	    const offsetX = event.clientX - elemOffset.x;
 	    const offsetY = event.clientY - elemOffset.y;
 	    const x = Math.floor(offsetX / CELL_SIZE);
