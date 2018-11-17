@@ -1,11 +1,12 @@
-import React,{Component} from 'react'
+import React from 'react'
 import "./Game.css"
 const CELL_SIZE= 10;
 const WIDTH=800
 const HEIGHT=600
 const boardStyle={width:WIDTH, height:HEIGHT,backgroundSize:`${CELL_SIZE}px ${CELL_SIZE}px`}
-const gliderCells=[{x: 1, y: 0},{x: 2, y: 1},{x: 0, y: 2},{x: 1, y: 2},{x: 2, y: 2}]
-const exploderCells=[{x: 0, y: 0},{x: 2, y: 0},{x: 4, y: 0},{x: 0, y: 1},{x: 4, y: 1},{x: 0, y: 2},{x: 4, y: 2},{x: 0, y: 3},{x: 4, y: 3},{x: 0, y: 4},{x: 2, y: 4},{x: 4, y: 4}]
+const glider=[{x: 1, y: 0},{x: 2, y: 1},{x: 0, y: 2},{x: 1, y: 2},{x: 2, y: 2}]
+const exploder=[{x: 0, y: 0},{x: 2, y: 0},{x: 4, y: 0},{x: 0, y: 1},{x: 4, y: 1},{x: 0, y: 2},{x: 4, y: 2},{x: 0, y: 3},{x: 4, y: 3},{x: 0, y: 4},{x: 2, y: 4},{x: 4, y: 4}]
+const pattern={"gliderCells":glider,"exploderCells":exploder}
 
 class Cell extends React.Component{
 	constructor(props){
@@ -31,6 +32,7 @@ class Game extends React.Component{
 		this.cols=WIDTH/CELL_SIZE
 		this.board=this.makeEmptyBoard()
 		this.timeout=null
+		//this.pattern=[]
 		this.state={
 			cells:[],
 			isRunning:false,
@@ -42,6 +44,7 @@ class Game extends React.Component{
 		this.handleInterval=this.handleInterval.bind(this)
 		this.pauseGame=this.pauseGame.bind(this)
 		this.makeRandomCells=this.makeRandomCells.bind(this)
+		this.makePattern=this.makePattern.bind(this)
 
 	}
 	startGame(e){
@@ -150,15 +153,26 @@ class Game extends React.Component{
 		}
 		return cells;
 	}
-	makePattern(pattern){
+	makePattern(e){
+		if(e.target.value===" ") {
+			this.stopGame()
+			return 0
+		}
+		if(e.target.value==="randomCells") {
+			this.makeRandomCells()
+			return 0
+		}
+		let p=pattern[e.target.value]
 		let newBoard=this.makeEmptyBoard()
 		this.board=newBoard
 		let patternCells=[]
-		for (var i = 0; i < pattern.length; i++) {
-			this.board[HEIGHT/2+pattern[i].y][WIDTH/2+pattern[i].x]=true
-			let x=WIDTH/2+pattern[i].x
-			let y=HEIGHT/2+pattern[i].y
-			patternCells.push({x,y})
+		for (var i = 0; i < p.length; i++) {
+			this.board[this.rows/2+p[i].y][this.cols/2+p[i].x]=true
+		}
+		for(let y=0;y<this.rows;y++){
+			for(let x=0;x<this.cols;x++){
+				if(this.board[y][x]) patternCells.push({x,y});
+			}
 		}
 		this.setState({cells:patternCells})
 	}
@@ -197,7 +211,9 @@ class Game extends React.Component{
           		))}
           		</div>
           		<div className='Controls' align='center'>
-          			Update every <input className='input' value={this.state.interval} onChange={this.handleInterval}></input> miliseconds
+          			<button className='button' value={1000} onClick={this.handleInterval}> Slow</button>
+          			<button className='button' value={100} onClick={this.handleInterval}> Medium</button>
+          			<button className='button' value={10} onClick={this.handleInterval}> Fast</button>
           			{	!this.state.isRunning?
           				<button className='button' onClick={this.startGame}> Run</button>:
           				<button className='button' onClick={this.pauseGame}> Pause</button>
@@ -205,13 +221,15 @@ class Game extends React.Component{
           			}
           			<button className='button' onClick={this.stopGame}> Stop&Reset</button>
           			{!this.state.isRunning?
-          				<button className='button' onClick={this.makeRandomCells}> Make random patterns</button>:
-          				<h1/>
+          			<select onChange={this.makePattern}>
+          				<option value=" ">Please select a pattern</option>
+          				<option value="gliderCells">gliderCells</option>
+          				<option value="exploderCells">exploderCells</option>
+       					<option value="randomCells">randomCells</option>
+          			</select>:
+          			<h1></h1>
           			}
-          				<select>
-          					<option value="1">gliderCells</option>
-          					<option value="2">exploderCells</option>
-          				</select>
+
           		</div>
           		<div className='analysis' align='center'>
           			We have {cnt} cells now.
