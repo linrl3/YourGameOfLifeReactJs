@@ -6,7 +6,8 @@ const HEIGHT=600
 const boardStyle={width:WIDTH, height:HEIGHT,backgroundSize:`${CELL_SIZE}px ${CELL_SIZE}px`}
 const glider=[{x: 1, y: 0},{x: 2, y: 1},{x: 0, y: 2},{x: 1, y: 2},{x: 2, y: 2}]
 const exploder=[{x: 0, y: 0},{x: 2, y: 0},{x: 4, y: 0},{x: 0, y: 1},{x: 4, y: 1},{x: 0, y: 2},{x: 4, y: 2},{x: 0, y: 3},{x: 4, y: 3},{x: 0, y: 4},{x: 2, y: 4},{x: 4, y: 4}]
-const pattern={"gliderCells":glider,"exploderCells":exploder}
+const tenRow=[{x: 0, y: 0},{x: 1, y: 0},{x: 2, y: 0},{x: 3, y: 0},{x: 4, y: 0},{x: 5, y: 0}, {x: 6, y: 0},{x: 7, y: 0},{x: 8, y: 0},{x: 9, y: 0}]
+const pattern={"gliderCells":glider,"exploderCells":exploder,"tenRowCells":tenRow}
 
 
 class Cell extends React.Component{
@@ -33,11 +34,12 @@ class Game extends React.Component{
 		this.cols=WIDTH/CELL_SIZE
 		this.board=this.makeEmptyBoard()
 		this.timeout=null
-		//this.pattern=[]
 		this.state={
 			cells:[],
 			isRunning:false,
-			interval:100
+			interval:100,
+			generation:0,
+			pattern:"none"
 		}
 		this.handleClick=this.handleClick.bind(this)
 		this.startGame=this.startGame.bind(this)
@@ -46,7 +48,6 @@ class Game extends React.Component{
 		this.pauseGame=this.pauseGame.bind(this)
 		this.makeRandomCells=this.makeRandomCells.bind(this)
 		this.makePattern=this.makePattern.bind(this)
-
 	}
 	startGame(e){
 		this.setState({isRunning:true})
@@ -54,6 +55,8 @@ class Game extends React.Component{
 	}
 	stopGame(e){
 		this.setState({isRunning:false})
+		this.setState({generation:0})
+		this.setState({pattern:"none"})
 		console.log("Game stopped!")
 		if(this.timeout){
 			window.clearTimeout(this.timeout)
@@ -93,13 +96,6 @@ class Game extends React.Component{
 	getElementOffset() {
 	    const rect = this.boardRef.getBoundingClientRect();
 	    const doc = document.documentElement;
-	    console.log("---------")
-	    console.log("rect.left",rect.left)
-	    console.log("rect.top",rect.top)
-	    console.log("window.pageXOffset",window.pageXOffset)
-	    console.log("window.pageYOffset",window.pageYOffset)
-	    console.log("doc.clientLeft",doc.clientLeft)
-	    console.log("doc.clientTop",doc.clientTop)
 	    return {
 	      //consider scrolling
 	      //x: (rect.left - window.pageXOffset) - doc.clientLeft,
@@ -110,7 +106,8 @@ class Game extends React.Component{
 	  }
 	runInterations(){
 		console.log("Game Running!")
-		console.log(this.state.cells)
+		//console.log(this.state.cells)
+		this.setState({generation:this.state.generation+1})
 		window.localStorage.setItem("key","value");
 		let newBoard=this.makeEmptyBoard()
 		for (let y = 0; y < this.rows; y++) {
@@ -137,8 +134,6 @@ class Game extends React.Component{
 	handleClick = (event) => {
 	    const elemOffset = this.getElementOffset();
 	    //event.clientX is the position of the mouse click, minus offset, we can get the relative position in the graph
-	    console.log("event.clientX",event.clientX)
-	    console.log("event.clientY",event.clientY)
 	    const offsetX = event.clientX - elemOffset.x;
 	    const offsetY = event.clientY - elemOffset.y;
 	    const x = Math.floor(offsetX / CELL_SIZE);
@@ -171,12 +166,14 @@ class Game extends React.Component{
 			return 0
 		}
 		if(e.target.value==="randomCells") {
+			this.setState({pattern:"random"})
 			this.makeRandomCells()
 			return 0
 		}
 		let p=pattern[e.target.value]
 		let newBoard=this.makeEmptyBoard()
 		this.board=newBoard
+		this.setState({pattern:e.target.value})
 		let patternCells=[]
 		for (var i = 0; i < p.length; i++) {
 			this.board[this.rows/2+p[i].y][this.cols/2+p[i].x]=true
@@ -223,9 +220,6 @@ class Game extends React.Component{
           		))}
           		</div>
           		<div className='Controls' align='center'>
-          			<button className='button' value={1000} onClick={this.handleInterval}> Slow</button>
-          			<button className='button' value={100} onClick={this.handleInterval}> Medium</button>
-          			<button className='button' value={10} onClick={this.handleInterval}> Fast</button>
           			{	!this.state.isRunning?
           				<button className='button' onClick={this.startGame}> Run</button>:
           				<button className='button' onClick={this.pauseGame}> Pause</button>
@@ -238,13 +232,19 @@ class Game extends React.Component{
           				<option value="gliderCells">gliderCells</option>
           				<option value="exploderCells">exploderCells</option>
        					<option value="randomCells">randomCells</option>
+       					<option value="tenRowCells">tenRowCells</option>
           			</select>:
-          			<h1></h1>
+          			<h>Pattern:{this.state.pattern}</h>
           			}
-
+          		</div>
+          		<div className='Controls' align='center'>
+          			Game speed: 
+          			<button className='button' value={1000} onClick={this.handleInterval}> Slow</button>
+          			<button className='button' value={100} onClick={this.handleInterval}> Medium</button>
+          			<button className='button' value={10} onClick={this.handleInterval}> Fast</button>
           		</div>
           		<div className='analysis' align='center'>
-          			We have {cnt} cells now.
+          			Generations: {this.state.generation}
           		</div>
           	</div>
 			)
